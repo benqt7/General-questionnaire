@@ -1,0 +1,677 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>استبيان رضا المستفيد</title>
+
+  <style>
+    :root{
+      --bg:#0b1220; --card:#0f1b2d; --text:#e7eefc; --muted:#a9b6d3;
+      --line:rgba(255,255,255,.10); --input:rgba(255,255,255,.06); --input2:rgba(255,255,255,.09);
+      --accent:#6eceeb; --star-off:#5b6b8b; --star-on:#ffd45a; --a11y-font-scale:1;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-size: calc(16px * var(--a11y-font-scale));
+      font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif;
+      background:
+        radial-gradient(1200px 600px at 70% 10%, rgba(110,206,235,.12), transparent 60%),
+        radial-gradient(900px 500px at 20% 90%, rgba(85,188,217,.10), transparent 60%),
+        var(--bg);
+      color:var(--text);
+    }
+    .wrap{max-width:820px;margin:32px auto;padding:0 16px}
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:22px;
+      box-shadow:0 18px 40px rgba(0,0,0,.30);
+    }
+    .header h1{margin:0 0 8px;font-size: calc(22px * var(--a11y-font-scale));line-height:1.35}
+    .muted{color:var(--muted)}
+    .header p{margin:0}
+    .divider{height:1px;background:var(--line);margin:18px 0}
+    .field{margin:14px 0}
+    .label{display:block;margin-bottom:8px;font-weight:600}
+
+    select, textarea{
+      width:100%;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:var(--input);
+      color:var(--text);
+      padding:12px 12px;
+      outline:none;
+      transition:border .15s ease, background .15s ease;
+    }
+    select:focus, textarea:focus{
+      border-color:rgba(110,206,235,.45);
+      background:var(--input2);
+    }
+    .hint{display:block;margin-top:8px;color:var(--muted);font-size:12px}
+
+    .q{padding:14px 0;border-bottom:1px solid var(--line)}
+    .q:last-of-type{border-bottom:0}
+    .q-head{
+      display:flex;gap:12px;align-items:baseline;justify-content:space-between;margin-bottom:10px
+    }
+    .q-head h3{margin:0;font-size: calc(15.5px * var(--a11y-font-scale));font-weight:650;line-height:1.5}
+    .q-meta{color:var(--muted);font-size: calc(12px * var(--a11y-font-scale));white-space:nowrap}
+
+    .rating{
+      display:inline-flex;
+      flex-direction:row-reverse;
+      gap:8px;
+      user-select:none;
+    }
+    .rating input{
+      position:absolute;opacity:0;width:1px;height:1px;
+    }
+    .rating label{
+      font-size: calc(34px * var(--a11y-font-scale));line-height:1;
+      cursor:pointer;
+      color:var(--star-off);
+      filter:drop-shadow(0 8px 10px rgba(0,0,0,.25));
+      transition:transform .08s ease, color .12s ease;
+    }
+    .rating label:hover{transform:translateY(-1px) scale(1.02)}
+    .rating label:hover,
+    .rating label:hover ~ label{color:var(--star-on)}
+    .rating input:checked ~ label{color:var(--star-on)}
+    .rating input:focus-visible + label{
+      outline:2px solid rgba(110,206,235,.65);
+      outline-offset:4px;
+      border-radius:10px;
+    }
+
+    .actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+    .btn{
+      border:1px solid var(--line);
+      background:var(--input);
+      color:var(--text);
+      padding:11px 14px;
+      border-radius:12px;
+      cursor:pointer;
+      transition:transform .06s ease, background .15s ease, border .15s ease;
+    }
+    .btn:hover{background:var(--input2)}
+    .btn:active{transform:translateY(1px)}
+    .btn.primary{
+      border-color:rgba(110,206,235,.35);
+      background:linear-gradient(180deg, rgba(110,206,235,.18), rgba(110,206,235,.10));
+    }
+    .btn.primary:hover{border-color:rgba(110,206,235,.55)}
+    .foot{margin:14px 0 0;font-size:12px}
+
+    .hidden{display:none !important}
+    .done-actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+    .json{
+      margin-top:14px;padding:14px;border-radius:12px;border:1px solid var(--line);
+      background:rgba(0,0,0,.22);overflow:auto;max-height:320px;
+      direction:ltr;text-align:left;font-size: calc(12px * var(--a11y-font-scale));
+    }
+
+    /* ===== A11Y TOOLBAR ===== */
+    .a11y{
+      position: fixed;
+      left: 12px;
+      top: 110px;
+      z-index: 99999;
+    }
+
+    .a11y-btn{
+      width: 56px;
+      height: 56px;
+      border: 0;
+      border-radius: 0;
+      background: #5f7e7d;
+      color: #fff;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 10px 22px rgba(0,0,0,.25);
+    }
+    .a11y-btn:active{ transform: translateY(1px); }
+
+    .a11y-panel{
+      position: absolute;
+      left: 56px;
+      top: 0;
+      width: 320px;
+      background: #fff;
+      color: #222;
+      border: 2px solid #3f6f6d;
+      box-shadow: 0 16px 30px rgba(0,0,0,.25);
+      padding: 10px 0;
+      display: none;
+    }
+    .a11y-panel.open{ display: block; }
+
+    .a11y-title{
+      font-weight: 800;
+      font-size: calc(22px * var(--a11y-font-scale));
+      padding: 10px 16px 14px;
+      text-align: right;
+    }
+
+    .a11y-item{
+      width: 100%;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: calc(18px * var(--a11y-font-scale));
+    }
+    .a11y-item:hover{ background: rgba(0,0,0,.06); }
+
+    .a11y-right{
+      opacity: .85;
+      font-weight: 700;
+      min-width: 54px;
+      text-align: left;
+    }
+
+    .a11y-item.is-active{
+      background: rgba(63,111,109,.12);
+      outline: 1px dashed rgba(63,111,109,.55);
+    }
+
+    .a11y-reset{
+      margin-top: 8px;
+      border-top: 1px solid rgba(0,0,0,.08);
+      padding-top: 14px;
+    }
+
+    /* ===== A11Y MODES ===== */
+    body.a11y-light{
+      --bg:#f3f6fb;
+      --text:#0b1220;
+      --muted:#3b4a66;
+      --line:rgba(0,0,0,.12);
+      --input:rgba(0,0,0,.04);
+      --input2:rgba(0,0,0,.07);
+    }
+    body.a11y-light{
+      background: var(--bg) !important;
+    }
+
+    body.a11y-contrast{
+      --bg:#000;
+      --text:#fff;
+      --muted:#fff;
+      --line:#fff;
+      --input:#000;
+      --input2:#111;
+    }
+    body.a11y-contrast{
+      background: #000 !important;
+    }
+
+    body.a11y-underline a{ text-decoration: underline !important; }
+
+    body.a11y-readable-font{
+      font-family: Arial, Tahoma, "Segoe UI", sans-serif !important;
+      letter-spacing: .2px;
+      line-height: 1.75;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <!-- A11Y TOOLBAR -->
+  <div class="a11y" id="a11y">
+    <button class="a11y-btn" id="a11yBtn" type="button" aria-label="أداة مساعدة" aria-expanded="false">
+      <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true">
+        <path fill="currentColor" d="M12 2a2 2 0 1 1 0 4a2 2 0 0 1 0-4ZM5 7a1 1 0 0 0 0 2h4v12a1 1 0 1 0 2 0v-6h2v6a1 1 0 1 0 2 0V9h4a1 1 0 1 0 0-2H5Z"/>
+      </svg>
+    </button>
+
+    <div class="a11y-panel" id="a11yPanel" role="menu" aria-hidden="true">
+      <div class="a11y-title">أداة مساعدة</div>
+
+      <button class="a11y-item" type="button" data-action="text_inc">
+        <span>زيادة النص</span>
+        <span class="a11y-right" id="a11yScaleLabel">100%</span>
+      </button>
+
+      <button class="a11y-item" type="button" data-action="text_dec">
+        <span>تقليل النص</span>
+        <span class="a11y-right">A−</span>
+      </button>
+
+      <button class="a11y-item" type="button" data-toggle="grayscale">
+        <span>تدرّج رمادي</span>
+        <span class="a11y-right">▦</span>
+      </button>
+
+      <button class="a11y-item" type="button" data-toggle="highContrast">
+        <span>تباين عالي</span>
+        <span class="a11y-right">◐</span>
+      </button>
+
+      <button class="a11y-item" type="button" data-toggle="negativeContrast">
+        <span>تباين سلبي</span>
+        <span class="a11y-right">◑</span>
+      </button>
+
+      <button class="a11y-item" type="button" data-toggle="lightBg">
+        <span>ضوء الخلفية</span>
+        <span class="a11y-right">💡</span>
+      </button>
+
+      <button class="a11y-item" type="button" data-toggle="underlineLinks">
+        <span>تسطير الروابط</span>
+        <span class="a11y-right">🔗</span>
+      </button>
+
+      <button class="a11y-item" type="button" data-toggle="readableFont">
+        <span>الخط المقروء</span>
+        <span class="a11y-right">A</span>
+      </button>
+
+      <button class="a11y-item a11y-reset" type="button" data-action="reset">
+        <span>Reset</span>
+        <span class="a11y-right">↺</span>
+      </button>
+    </div>
+  </div>
+
+  <main class="wrap">
+    <section class="card" id="formCard">
+      <header class="header">
+        <h1>استبيان رضا عام عن تجربة المستفيد مع المؤسسة</h1>
+        <p class="muted">قيّم التجربة بالنجوم، ويمكنك إضافة ملاحظاتك في النهاية.</p>
+      </header>
+
+      <form id="surveyForm" novalidate>
+        <div class="field">
+          <label for="serviceType" class="label">نوع الخدمة</label>
+          <select id="serviceType" name="service_type" required>
+            <option value="" selected disabled>اختر نوع الخدمة</option>
+            <option value="تأهيل">تأهيل</option>
+            <option value="توظيف">توظيف</option>
+            <option value="متابعة">متابعة</option>
+            <option value="استشارة">استشارة</option>
+          </select>
+          <small class="hint">اختيار واحد فقط.</small>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="q">
+          <div class="q-head">
+            <h3>كانت الخدمات واضحة ومفهومة بالنسبة لي.</h3>
+            <span class="q-meta" data-live-for="q1">لم يتم التقييم</span>
+          </div>
+          <div class="rating" aria-label="تقييم السؤال الأول">
+            <input type="radio" id="q1-5" name="q1" value="5" required><label for="q1-5" title="5 نجوم">★</label>
+            <input type="radio" id="q1-4" name="q1" value="4"><label for="q1-4" title="4 نجوم">★</label>
+            <input type="radio" id="q1-3" name="q1" value="3"><label for="q1-3" title="3 نجوم">★</label>
+            <input type="radio" id="q1-2" name="q1" value="2"><label for="q1-2" title="نجمتين">★</label>
+            <input type="radio" id="q1-1" name="q1" value="1"><label for="q1-1" title="نجمة">★</label>
+          </div>
+        </div>
+
+        <div class="q">
+          <div class="q-head">
+            <h3>كانت إجراءات المؤسسة سهلة والتواصل واضح.</h3>
+            <span class="q-meta" data-live-for="q2">لم يتم التقييم</span>
+          </div>
+          <div class="rating" aria-label="تقييم السؤال الثاني">
+            <input type="radio" id="q2-5" name="q2" value="5" required><label for="q2-5" title="5 نجوم">★</label>
+            <input type="radio" id="q2-4" name="q2" value="4"><label for="q2-4" title="4 نجوم">★</label>
+            <input type="radio" id="q2-3" name="q2" value="3"><label for="q2-3" title="3 نجوم">★</label>
+            <input type="radio" id="q2-2" name="q2" value="2"><label for="q2-2" title="نجمتين">★</label>
+            <input type="radio" id="q2-1" name="q2" value="1"><label for="q2-1" title="نجمة">★</label>
+          </div>
+        </div>
+
+        <div class="q">
+          <div class="q-head">
+            <h3>تعامل الموظفون معي باحترام وتعاون.</h3>
+            <span class="q-meta" data-live-for="q3">لم يتم التقييم</span>
+          </div>
+          <div class="rating" aria-label="تقييم السؤال الثالث">
+            <input type="radio" id="q3-5" name="q3" value="5" required><label for="q3-5" title="5 نجوم">★</label>
+            <input type="radio" id="q3-4" name="q3" value="4"><label for="q3-4" title="4 نجوم">★</label>
+            <input type="radio" id="q3-3" name="q3" value="3"><label for="q3-3" title="3 نجوم">★</label>
+            <input type="radio" id="q3-2" name="q3" value="2"><label for="q3-2" title="نجمتين">★</label>
+            <input type="radio" id="q3-1" name="q3" value="1"><label for="q3-1" title="نجمة">★</label>
+          </div>
+        </div>
+
+        <div class="q">
+          <div class="q-head">
+            <h3>الخدمة المقدمة حققت الفائدة المتوقعة لي.</h3>
+            <span class="q-meta" data-live-for="q4">لم يتم التقييم</span>
+          </div>
+          <div class="rating" aria-label="تقييم السؤال الرابع">
+            <input type="radio" id="q4-5" name="q4" value="5" required><label for="q4-5" title="5 نجوم">★</label>
+            <input type="radio" id="q4-4" name="q4" value="4"><label for="q4-4" title="4 نجوم">★</label>
+            <input type="radio" id="q4-3" name="q4" value="3"><label for="q4-3" title="3 نجوم">★</label>
+            <input type="radio" id="q4-2" name="q4" value="2"><label for="q4-2" title="نجمتين">★</label>
+            <input type="radio" id="q4-1" name="q4" value="1"><label for="q4-1" title="نجمة">★</label>
+          </div>
+        </div>
+
+        <div class="q">
+          <div class="q-head">
+            <h3>بشكل عام، أنا راضٍ عن تجربتي مع المؤسسة.</h3>
+            <span class="q-meta" data-live-for="q5">لم يتم التقييم</span>
+          </div>
+          <div class="rating" aria-label="تقييم السؤال الخامس">
+            <input type="radio" id="q5-5" name="q5" value="5" required><label for="q5-5" title="5 نجوم">★</label>
+            <input type="radio" id="q5-4" name="q5" value="4"><label for="q5-4" title="4 نجوم">★</label>
+            <input type="radio" id="q5-3" name="q5" value="3"><label for="q5-3" title="3 نجوم">★</label>
+            <input type="radio" id="q5-2" name="q5" value="2"><label for="q5-2" title="نجمتين">★</label>
+            <input type="radio" id="q5-1" name="q5" value="1"><label for="q5-1" title="نجمة">★</label>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="field">
+          <label for="notes" class="label">ملاحظاتكم ومقترحاتكم للتحسين</label>
+          <textarea id="notes" name="notes" rows="5" placeholder="اكتب ملاحظتك هنا (اختياري)"></textarea>
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="btn primary" id="submitBtn">إرسال الاستبيان</button>
+          <button type="reset" class="btn" id="resetBtn">مسح</button>
+        </div>
+
+        <p class="foot muted">بالإرسال أنت تساعدنا على تحسين الخدمة. شكرًا لك.</p>
+      </form>
+    </section>
+
+    <section class="card hidden" id="doneCard" aria-live="polite">
+      <h2>تم الاستلام ✅</h2>
+      <p class="muted">شكرًا لك. تم حفظ ردك.</p>
+
+      <div class="done-actions">
+        <button class="btn primary" id="newOneBtn">استبيان جديد</button>
+        <button class="btn" id="copyBtn" title="نسخ البيانات كـ JSON">نسخ البيانات</button>
+      </div>
+
+      <pre class="json" id="jsonOut"></pre>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      const form = document.getElementById("surveyForm");
+      const formCard = document.getElementById("formCard");
+      const doneCard = document.getElementById("doneCard");
+      const jsonOut = document.getElementById("jsonOut");
+      const submitBtn = document.getElementById("submitBtn");
+      const newOneBtn = document.getElementById("newOneBtn");
+      const copyBtn = document.getElementById("copyBtn");
+
+      let lastPayload = null;
+
+      // Google Sheet (Apps Script Web App)
+      // ضع رابط /exec + توكن مطابق للسكربت. اتركهم فاضيين لو ما تبي تسجيل.
+      const SHEETS_WEBAPP_URL = ""; // مثال: https://script.google.com/macros/s/XXXX/exec
+      const SHEETS_TOKEN = "";
+
+
+      function wireLiveMeta() {
+        const groups = ["q1", "q2", "q3", "q4", "q5"];
+        groups.forEach((name) => {
+          const meta = document.querySelector(`[data-live-for="${name}"]`);
+          const inputs = document.querySelectorAll(`input[name="${name}"]`);
+          inputs.forEach((inp) => {
+            inp.addEventListener("change", () => {
+              meta.textContent = `تم التقييم: ${inp.value}/5`;
+            });
+          });
+        });
+      }
+
+      function buildPayload() {
+        const fd = new FormData(form);
+        const data = Object.fromEntries(fd.entries());
+        ["q1","q2","q3","q4","q5"].forEach(k => data[k] = Number(data[k]));
+        return { ...data, submitted_at: new Date().toISOString() };
+      }
+
+      async function sendPayload(payload) {
+        // 1) Google Sheet عبر Apps Script Web App
+        if (SHEETS_WEBAPP_URL && SHEETS_TOKEN) {
+          const body = new URLSearchParams({
+            token: SHEETS_TOKEN,
+            service_type: payload.service_type || "",
+            q1: String(payload.q1 ?? ""),
+            q2: String(payload.q2 ?? ""),
+            q3: String(payload.q3 ?? ""),
+            q4: String(payload.q4 ?? ""),
+            q5: String(payload.q5 ?? ""),
+            notes: payload.notes || "",
+            submitted_at: payload.submitted_at || ""
+          });
+
+          try {
+            await fetch(SHEETS_WEBAPP_URL, {
+              method: "POST",
+              body,
+              mode: "no-cors"
+            });
+            return true; // no-cors ما يرجّع نتيجة، المهم أنه انرسل
+          } catch {
+            return false;
+          }
+        }
+
+        // 2) FiveM NUI (اختياري) أو endpoint محلي
+        const isNui = typeof window.GetParentResourceName === "function";
+        const url = isNui ? `https://${window.GetParentResourceName()}/submitSurvey` : `/submitSurvey`;
+
+        try {
+          const res = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json; charset=UTF-8" },
+            body: JSON.stringify(payload)
+          });
+          return res.ok;
+        } catch {
+          // تشغيل محلي بدون سيرفر
+          return false;
+        }
+      }
+
+      function showDone(payload, sentOk) {
+        lastPayload = payload;
+        jsonOut.textContent = JSON.stringify({ ...payload, sent_ok: !!sentOk }, null, 2);
+        formCard.classList.add("hidden");
+        doneCard.classList.remove("hidden");
+      }
+
+      function showForm() {
+        doneCard.classList.add("hidden");
+        formCard.classList.remove("hidden");
+        form.reset();
+        document.querySelectorAll("[data-live-for]").forEach(el => el.textContent = "لم يتم التقييم");
+        lastPayload = null;
+        jsonOut.textContent = "";
+      }
+
+      wireLiveMeta();
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        if (!form.checkValidity()) { form.reportValidity(); return; }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = "جارٍ الإرسال...";
+
+        const payload = buildPayload();
+        const sentOk = await sendPayload(payload);
+
+        submitBtn.disabled = false;
+        submitBtn.textContent = "إرسال الاستبيان";
+
+        showDone(payload, sentOk);
+      });
+
+      newOneBtn.addEventListener("click", showForm);
+
+      copyBtn.addEventListener("click", async () => {
+        if (!lastPayload) return;
+        try {
+          await navigator.clipboard.writeText(jsonOut.textContent);
+          copyBtn.textContent = "تم النسخ ✅";
+          setTimeout(() => (copyBtn.textContent = "نسخ البيانات"), 1200);
+        } catch {
+          const ta = document.createElement("textarea");
+          ta.value = jsonOut.textContent;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          document.body.removeChild(ta);
+          copyBtn.textContent = "تم النسخ ✅";
+          setTimeout(() => (copyBtn.textContent = "نسخ البيانات"), 1200);
+        }
+      });
+    })();
+  </script>
+
+  <script>
+    /* ===== A11Y TOOLBAR JS ===== */
+    (() => {
+      const STORAGE_KEY = "a11y_settings_v1";
+
+      const DEFAULT = {
+        fontScale: 1,
+        grayscale: false,
+        highContrast: false,
+        negativeContrast: false,
+        lightBg: false,
+        underlineLinks: false,
+        readableFont: false
+      };
+
+      const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+
+      const btn = document.getElementById("a11yBtn");
+      const panel = document.getElementById("a11yPanel");
+      const scaleLabel = document.getElementById("a11yScaleLabel");
+
+      if (!btn || !panel || !scaleLabel) return;
+
+      function load() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return { ...DEFAULT };
+          const parsed = JSON.parse(raw);
+          return { ...DEFAULT, ...parsed };
+        } catch {
+          return { ...DEFAULT };
+        }
+      }
+
+      function save(s) {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch {}
+      }
+
+      function computeFilter(s) {
+        const f = [];
+        if (s.grayscale) f.push("grayscale(1)");
+        if (s.negativeContrast) f.push("invert(1) hue-rotate(180deg)");
+        return f.join(" ");
+      }
+
+      function apply(s) {
+        document.documentElement.style.setProperty("--a11y-font-scale", String(s.fontScale));
+        scaleLabel.textContent = `${Math.round(s.fontScale * 100)}%`;
+
+        document.body.classList.toggle("a11y-light", !!s.lightBg);
+        document.body.classList.toggle("a11y-contrast", !!s.highContrast);
+        document.body.classList.toggle("a11y-underline", !!s.underlineLinks);
+        document.body.classList.toggle("a11y-readable-font", !!s.readableFont);
+
+        const filter = computeFilter(s);
+        document.documentElement.style.filter = filter ? filter : "";
+
+        document.querySelectorAll(".a11y-item[data-toggle]").forEach(el => {
+          const key = el.getAttribute("data-toggle");
+          el.classList.toggle("is-active", !!s[key]);
+        });
+
+        save(s);
+      }
+
+      function openPanel(open) {
+        const isOpen = open ?? !panel.classList.contains("open");
+        panel.classList.toggle("open", isOpen);
+        btn.setAttribute("aria-expanded", String(isOpen));
+        panel.setAttribute("aria-hidden", String(!isOpen));
+      }
+
+      let state = load();
+      apply(state);
+
+      btn.addEventListener("click", () => openPanel());
+
+      document.addEventListener("click", (e) => {
+        if (!panel.classList.contains("open")) return;
+        const root = document.getElementById("a11y");
+        if (root && !root.contains(e.target)) openPanel(false);
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") openPanel(false);
+      });
+
+      panel.addEventListener("click", (e) => {
+        const b = e.target.closest(".a11y-item");
+        if (!b) return;
+
+        const action = b.getAttribute("data-action");
+        const toggle = b.getAttribute("data-toggle");
+
+        if (action === "text_inc") {
+          state.fontScale = clamp(state.fontScale + 0.1, 0.85, 1.45);
+          apply(state);
+          return;
+        }
+
+        if (action === "text_dec") {
+          state.fontScale = clamp(state.fontScale - 0.1, 0.85, 1.45);
+          apply(state);
+          return;
+        }
+
+        if (action === "reset") {
+          state = { ...DEFAULT };
+          apply(state);
+          return;
+        }
+
+        if (toggle) {
+          if (toggle === "highContrast") {
+            state.highContrast = !state.highContrast;
+            if (state.highContrast) state.negativeContrast = false;
+          } else if (toggle === "negativeContrast") {
+            state.negativeContrast = !state.negativeContrast;
+            if (state.negativeContrast) state.highContrast = false;
+          } else {
+            state[toggle] = !state[toggle];
+          }
+          apply(state);
+        }
+      });
+    })();
+  </script>
+
+</body>
+</html>
